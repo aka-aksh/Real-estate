@@ -14,3 +14,8 @@
 
 Current milestone: M1 (Vercel deploy pending)
 Next: First Vercel deploy, then M2.
+
+## M1 deployment debugging
+- Vercel dependency resolution failed because Vitest 5 requires `@types/node` `^22.0.0 || >=24.0.0`, while the project requested major 20.
+- Updated `@types/node` to `^22.20.4` and regenerated the lockfile; clean-install dry run, lint, tests, and build pass.
+- First Vercel deploy remains pending.
