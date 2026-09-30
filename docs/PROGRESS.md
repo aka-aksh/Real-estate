@@ -49,4 +49,9 @@ Provider verification: Owner reports both configured model names returned JSON i
 - Phase 5: dashboard refreshes after lead writes, tab focus/visibility changes, and cross-tab storage events. Status write failures show an error; status is visible in the dashboard row. Root cause was a one-time dashboard localStorage read with no subscription.
 - Phase 6: lead rows and detail pages support confirmed deletion; sample deletion preserves the seed flag. Restore sample leads re-adds missing seed IDs without changing real leads.
 - Phase 7: added the built-in Lead inbox, clipboard copy, one-time sessionStorage prefill, spreadsheet-row parser, optional validated leads-source link, dark dashboard hero, and English/Hindi/Hinglish strings for the new surfaces.
-- Note: this checkout did not contain the earlier Trust-Estate rename, demo-login, full dark UI, or AI prompt-language phases. Those are not represented as completed here; demo login and AI response-language controls remain absent.
+- Audit at the start of this continuation found demo login and AI prompt-language controls absent; the rename and some dark styling were already present.
+
+## Trust-Estate continuation (auth, AI language, visual hardening)
+- Added browser-only demo login with the `trustEstate.session` key; it does not alter or clear saved leads.
+- Added optional per-request language for all four AI routes and regeneration of lead analysis in the selected language. English prompt text remains unchanged; Hindi and Hinglish receive an explicit output instruction.
+- Expanded shared dark styling for legacy semantic color utilities and translated login/regeneration controls. Dictionary key parity remains tested; older screen labels still contain English literals, so full UI localization is partial.

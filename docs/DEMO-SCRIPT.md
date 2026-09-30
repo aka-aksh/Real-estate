@@ -1,5 +1,7 @@
 # Trust-Estate - Three-minute demo
 
+- **Before starting:** Sign in with `demo@trustestate.app` / `demo1234`, or choose Continue as demo. The demo gate is not secure authentication.
+
 - **0:00 - Dashboard:** Show sample leads, score counts, and ranked rows under the green-glass hero.
 - **0:20 - Inbox and language:** Copy an inquiry, switch to Hindi or Hinglish, and use a row to prefill intake. Paste a spreadsheet row as the alternate intake path.
 - **0:50 - Lead management:** Add a lead, inspect analysis and code-computed score reasons, change its status, then return to the dashboard and show the updated status.

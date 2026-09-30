@@ -33,6 +33,20 @@ body {
 .bg-blue-600 { background: linear-gradient(135deg, #10b981, #14b8a6) !important; color: #052e2b !important; }
 .hover\:bg-blue-700:hover { background: linear-gradient(135deg, #059669, #0f766e) !important; color: white !important; }
 
+/* Preserve the dark surface system on older utility-class screens. */
+.bg-amber-50, .bg-amber-100, .bg-blue-50, .bg-blue-100, .bg-green-50, .bg-green-100,
+.bg-indigo-50, .bg-purple-50, .bg-red-50, .bg-red-100, .bg-emerald-50 {
+  background-color: rgb(255 255 255 / 0.06) !important;
+}
+.text-amber-500, .text-amber-600, .text-amber-700, .text-amber-800,
+.text-blue-600, .text-blue-700, .text-blue-900, .text-green-700, .text-green-800,
+.text-green-900, .text-indigo-600, .text-indigo-700, .text-purple-600,
+.text-purple-700, .text-purple-800, .text-red-500, .text-red-600, .text-red-700 {
+  color: #a7f3d0 !important;
+}
+.border-amber-300, .border-blue-300, .border-blue-500, .border-green-700,
+.border-red-200, .border-red-400 { border-color: rgb(255 255 255 / 0.16) !important; }
+
 .dashboard-hero::before {
   position: absolute;
   z-index: -1;

@@ -69,11 +69,11 @@ The dashboard uses a dark slate base, emerald accent, and glass-style hero cards
 
 - localStorage is per browser and is not shared across devices.
 - The in-memory rate limiter is best-effort on serverless instances.
-- There is no authentication; do not put real customer data in a public demo.
+- Demo login is client-side only, stores a demo session in this browser, and is not secure; any valid email and password of six or more characters works. Do not put real customer data in a public demo.
 - Project profile details are fictional. The model can misread Hinglish dates or mood; review extracted details before acting.
 - Drafts are for copying only; the app does not send messages or book appointments.
 - Provider quotas and availability depend on the configured accounts.
-- Demo login and language selection are not present in this checkout; API routes remain unauthenticated.
+- API routes remain unauthenticated; demo login only gates the browser UI. AI responses can be requested in English, Hindi, or Hinglish, while enum values and stored lead data remain language-independent.
 
 ## AI usage disclosure
 

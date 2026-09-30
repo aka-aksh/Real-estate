@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+// Demo-only browser gate; this session is not secure authentication.
 export const SESSION_KEY = "trustEstate.session";
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
@@ -18,7 +19,6 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     } catch { /* Treat unavailable or malformed storage as signed out. */ }
     // eslint-disable-next-line react-hooks/set-state-in-effect -- read persisted session only after hydration
     setHasSession(valid);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- finish client-only session check
     setChecked(true);
   }, [pathname]);
   useEffect(() => {
