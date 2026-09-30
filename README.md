@@ -77,4 +77,28 @@ The dashboard uses a dark slate base, emerald accent, and glass-style hero cards
 
 ## AI usage disclosure
 
-TODO: Owner to complete with the tools used, what AI contributed, and how the output was reviewed.
+**Development tools**
+
+| Tool | What it was used for |
+|---|---|
+| Claude (Anthropic) | Planning the milestones, designing the architecture and prompts, writing the task prompts given to the coding agents, and debugging (provider errors, Vercel environment variables, encoding issues). Also used to draft demo-script and README wording. |
+| Codex (via Google Antigravity) | Generating and editing the code: project scaffold, API routes, the `callModel` provider layer, scoring, Promise Keeper, UI, i18n, tests. Antigravity was used for the first milestone until its quota ran out, and Codex for the rest. |
+
+**AI models inside the product (runtime, not development)**
+
+- **Gemini** (`GEMINI_MODEL`, currently `gemini-3.5-flash`) is the primary model for lead analysis, chat, Promise Keeper extraction and draft replies.
+- **Groq** (`GROQ_MODEL`, currently `openai/gpt-oss-120b`, reasoning effort low) is the automatic fallback.
+- Both are called in JSON mode from server routes only. Output is validated with Zod. Model names come from environment variables.
+
+**How AI output was reviewed**
+
+- I verified both providers with a real call from my own terminal before building on them.
+- The score (`lib/scoring.ts`) and promise deadline status (`features/promiseKeeper/status.ts`) are plain code, not AI, so they are deterministic and unit tested. The test suite runs with Vitest.
+- I ran the app locally and on the live URL, testing the main flow (add lead, analysis, score, chat on two leads, Promise Keeper with a Hinglish message, status change, delete) and fixed the bugs I found, for example the dashboard not refreshing after a status change and garbled Hindi text.
+- I read the generated code for the parts I explain in the interview: `callModel` (timeouts, retry and fallback rules), the scoring function, the Promise Keeper status logic, and the storage layer.
+
+**Limits of the AI-generated work**
+
+- Model output can be wrong or incomplete, so Promise Keeper items can be edited or deleted by the user, and unparseable dates are marked "vague" instead of guessed.
+- The demo login and browser-only storage are prototype choices, listed under Known limitations.
+
