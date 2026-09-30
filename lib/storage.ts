@@ -1,6 +1,6 @@
 import { type Lead, safeDefaults } from "@/types/lead";
 
-// Keep these legacy keys so existing browser profiles retain their saved leads.
+// Keep legacy Masal keys unchanged so existing browser profiles retain their saved leads.
 const LEADS_KEY = "masal_leads";
 const SEEDED_KEY = "masal_seeded";
 export const LEADS_CHANGED_EVENT = "trustEstate:leads-changed";
