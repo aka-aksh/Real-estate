@@ -196,7 +196,7 @@ export default function LeadDetailPage() {
               Copy draft
             </button>
             <button onClick={retryAnalysis} disabled={retrying} className="ml-2 mt-2 rounded border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 disabled:opacity-50">
-              {retrying ? "Regenerating..." : "Regenerate in current language"}
+              {retrying ? t("regenerating") : t("regenerateLanguage")}
             </button>
             {analysisError && <p role="alert" className="mt-1 text-xs text-red-700">{analysisError}</p>}
             {copyError && <p role="alert" className="mt-1 text-xs text-red-700">{copyError}</p>}

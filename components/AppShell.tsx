@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -50,13 +50,12 @@ function ShellContent({ children }: { children: ReactNode }) {
           {pathname !== "/login" && <NavLink href="/today" active={pathname === "/today"}>{t("today")}</NavLink>}
           {pathname !== "/login" && <NavLink href="/inbox" active={pathname === "/inbox"}>{t("leadInbox")}</NavLink>}
           <select aria-label="Language" value={language} onChange={(event) => setLanguage(event.target.value as typeof language)} className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400">
-            <option value="en">EN</option><option value="hi">हि</option><option value="hinglish">Hinglish</option>
+            <option value="en">EN</option><option value="hi">à¤¹à¤¿</option><option value="hinglish">Hinglish</option>
           </select>
+          {pathname !== "/login" && email && <><span className="hidden max-w-36 truncate text-xs text-slate-400 lg:block">{email}</span><button onClick={logout} className="rounded-lg border border-white/15 px-2 py-1.5 text-xs text-slate-200">{t("logout")}</button></>}
         </div>
       </nav>
     </header>
-    {pathname !== "/login" && email && <span className="sr-only">{email}</span>}
-    {pathname !== "/login" && email && <button onClick={logout} className="fixed right-4 top-3 z-40 rounded-lg border border-white/15 px-2 py-1.5 text-xs text-slate-200">{email} · Log out</button>}
     <AuthGate>{children}</AuthGate>
   </>;
 }
@@ -64,3 +63,4 @@ function ShellContent({ children }: { children: ReactNode }) {
 function NavLink({ href, active, children }: { href: string; active: boolean; children: ReactNode }) {
   return <Link href={href} aria-current={active ? "page" : undefined} className={`border-b-2 py-1 transition hover:text-emerald-300 ${active ? "border-emerald-400 text-white" : "border-transparent text-slate-300"}`}>{children}</Link>;
 }
+
