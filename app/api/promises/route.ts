@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { callModel } from "@/lib/ai";
+import { callModel, hasProviderKeys } from "@/lib/ai";
 import { takeRateLimit } from "@/lib/rateLimit";
 import { PromiseKeeperSchema } from "@/types/lead";
 import { PromiseKeeperOutputSchema } from "@/features/promiseKeeper/schemas";
@@ -39,6 +39,10 @@ export async function POST(request: Request): Promise<Response> {
   try { body = await request.json(); } catch { return failure("bad_request"); }
   const parsed = PKRequestSchema.safeParse(body);
   if (!parsed.success) return failure("bad_request");
+  if (!hasProviderKeys()) {
+    console.error(JSON.stringify({ category: "ai", route: "promises", step: "configuration", reason: "no_key" }));
+    return failure("no_provider_key");
+  }
 
   try {
     const result = await callModel(
@@ -47,8 +51,7 @@ export async function POST(request: Request): Promise<Response> {
     );
     if (!result.ok) {
       console.error(JSON.stringify({ category: "ai", route: "promises", step: result.step, reason: result.reason }));
-      const code: FailureCode = result.reason === "no_key" ? "no_provider_key"
-        : result.reason === "timeout" ? "provider_timeout"
+      const code: FailureCode = result.reason === "timeout" ? "provider_timeout"
         : result.reason === "invalid_json" || result.reason === "zod_fail" ? "invalid_output"
         : result.reason === "http_error" ? "provider_error"
         : "unknown";

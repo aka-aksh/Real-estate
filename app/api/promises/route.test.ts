@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { callModel, takeRateLimit } = vi.hoisted(() => ({ callModel: vi.fn(), takeRateLimit: vi.fn() }));
-vi.mock("@/lib/ai", () => ({ callModel }));
+const { callModel, hasProviderKeys, takeRateLimit } = vi.hoisted(() => ({ callModel: vi.fn(), hasProviderKeys: vi.fn(), takeRateLimit: vi.fn() }));
+vi.mock("@/lib/ai", () => ({ callModel, hasProviderKeys }));
 vi.mock("@/lib/rateLimit", () => ({ takeRateLimit }));
 
 import { POST } from "@/app/api/promises/route";
@@ -18,12 +18,17 @@ function request(body: unknown = requestBody) {
 describe("POST /api/promises safe errors", () => {
   beforeEach(() => {
     vi.stubEnv("NEXT_PUBLIC_PROMISE_KEEPER_ENABLED", "true");
+    vi.stubEnv("GEMINI_API_KEY", "test-gemini-key");
+    vi.stubEnv("GROQ_API_KEY", "test-groq-key");
+    hasProviderKeys.mockImplementation(() => Boolean(process.env.GEMINI_API_KEY?.trim() || process.env.GROQ_API_KEY?.trim()));
     takeRateLimit.mockReturnValue(true);
     callModel.mockReset();
   });
 
+  afterEach(() => vi.unstubAllEnvs());
+
   it.each([
-    ["no_key", "no_provider_key", 503],
+    ["no_key", "unknown", 500],
     ["timeout", "provider_timeout", 504],
     ["http_error", "provider_error", 503],
     ["invalid_json", "invalid_output", 502],
@@ -41,6 +46,21 @@ describe("POST /api/promises safe errors", () => {
     expect(response.status).toBe(404);
     expect(await response.json()).toEqual({ ok: false, code: "flag_off" });
     expect(callModel).not.toHaveBeenCalled();
+  });
+
+  it("returns no_provider_key only when both provider keys are absent", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "");
+    vi.stubEnv("GROQ_API_KEY", "");
+    const missingBoth = await POST(request());
+    expect(missingBoth.status).toBe(503);
+    expect(await missingBoth.json()).toEqual({ ok: false, code: "no_provider_key" });
+    expect(callModel).not.toHaveBeenCalled();
+
+    vi.stubEnv("GEMINI_API_KEY", "test-gemini-key");
+    callModel.mockResolvedValue({ ok: false, error: "safe", category: "unavailable", reason: "http_error", step: "gemini" });
+    const result = await POST(request());
+    expect(result.status).toBe(503);
+    expect(await result.json()).toEqual({ ok: false, code: "provider_error" });
   });
 
   it("returns route-level safe codes for rate limit and invalid body", async () => {

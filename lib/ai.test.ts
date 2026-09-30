@@ -8,7 +8,7 @@ vi.mock("@google/genai", () => ({
   },
 }));
 
-import { callModel } from "@/lib/ai";
+import { callModel, hasProviderKeys } from "@/lib/ai";
 
 const AnswerSchema = z.object({ answer: z.string() });
 const validAnswer = JSON.stringify({ answer: "ready" });
@@ -30,6 +30,25 @@ describe("callModel", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllEnvs();
+  });
+
+  it("detects provider keys independently from model configuration", () => {
+    vi.stubEnv("GEMINI_API_KEY", "key-present");
+    vi.stubEnv("GROQ_API_KEY", "");
+    vi.stubEnv("GEMINI_MODEL", "");
+    expect(hasProviderKeys()).toBe(true);
+    vi.stubEnv("GEMINI_API_KEY", " ");
+    vi.stubEnv("GROQ_API_KEY", "");
+    expect(hasProviderKeys()).toBe(false);
+  });
+
+  it("does not label present keys with missing models as no_key", async () => {
+    vi.stubEnv("GEMINI_MODEL", "");
+    vi.stubEnv("GROQ_MODEL", "");
+    const result = await callModel("prompt", AnswerSchema);
+    expect(result).toMatchObject({ ok: false, reason: "http_error", step: "groq" });
+    expect(generateContent).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("falls back to Groq when Gemini returns a server error", async () => {

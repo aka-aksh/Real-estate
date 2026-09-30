@@ -8,6 +8,10 @@ export type CallModelResult<T> =
   | { ok: true; data: T; provider: Provider }
   | { ok: false; error: string; category: AiFailureCategory; reason: AiFailureReason; step: Provider | "configuration" };
 
+export function hasProviderKeys(): boolean {
+  return Boolean(process.env.GEMINI_API_KEY?.trim() || process.env.GROQ_API_KEY?.trim());
+}
+
 type ProviderAttempt =
   | { ok: true; text: string }
   | { ok: false; category: "timeout" | "quota" | "server" | "invalid_json" | "invalid_output" | "provider_error" | "no_key" };
@@ -34,9 +38,10 @@ function errorCategory(error: unknown): ProviderError {
 }
 
 async function requestGemini(prompt: string, timeoutMs: number): Promise<ProviderAttempt> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  const model = process.env.GEMINI_MODEL;
-  if (!apiKey || !model) return { ok: false, category: "no_key" };
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  const model = process.env.GEMINI_MODEL?.trim();
+  if (!apiKey) return { ok: false, category: "no_key" };
+  if (!model) return { ok: false, category: "provider_error" };
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -61,9 +66,10 @@ async function requestGemini(prompt: string, timeoutMs: number): Promise<Provide
 }
 
 async function requestGroq(prompt: string, timeoutMs: number): Promise<ProviderAttempt> {
-  const apiKey = process.env.GROQ_API_KEY;
-  const model = process.env.GROQ_MODEL;
-  if (!apiKey || !model) return { ok: false, category: "no_key" };
+  const apiKey = process.env.GROQ_API_KEY?.trim();
+  const model = process.env.GROQ_MODEL?.trim();
+  if (!apiKey) return { ok: false, category: "no_key" };
+  if (!model) return { ok: false, category: "provider_error" };
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -187,12 +193,12 @@ function logProviderFailure(provider: Provider, attempt: number, category: strin
 
 /** Try Gemini, then Groq. Each provider gets at most one retry for approved failures. */
 export async function callModel<T>(prompt: string, schema: z.ZodType<T>): Promise<CallModelResult<T>> {
-  const hasGemini = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_MODEL);
-  const hasGroq = Boolean(process.env.GROQ_API_KEY && process.env.GROQ_MODEL);
-  if (!hasGemini && !hasGroq) {
+  if (!hasProviderKeys()) {
     return { ok: false, error: "AI providers are not configured.", category: "unavailable", reason: "no_key", step: "configuration" };
   }
 
+  const hasGemini = Boolean(process.env.GEMINI_API_KEY?.trim());
+  const hasGroq = Boolean(process.env.GROQ_API_KEY?.trim());
   const deadline = Date.now() + TOTAL_TIMEOUT_MS;
   const gemini = hasGemini ? await callProvider("gemini", prompt, schema, deadline) : null;
   if (gemini?.ok) return gemini;

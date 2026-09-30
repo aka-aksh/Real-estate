@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { callModel } from "@/lib/ai";
+import { callModel, hasProviderKeys } from "@/lib/ai";
 import { buildAnalysisPrompt } from "@/lib/prompts";
 import { computeScore } from "@/lib/scoring";
 import { takeRateLimit } from "@/lib/rateLimit";
@@ -29,6 +29,9 @@ export async function POST(request: Request): Promise<Response> {
   const parsed = RequestSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json({ error: "Please check the lead details and try again." }, { status: 400 });
+  }
+  if (!hasProviderKeys()) {
+    return Response.json({ error: "AI analysis unavailable. Please retry." }, { status: 503 });
   }
 
   const result = await callModel(buildAnalysisPrompt(parsed.data.form, parsed.data.language), AnalysisContentSchema);
