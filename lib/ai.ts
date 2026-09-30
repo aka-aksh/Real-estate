@@ -5,7 +5,7 @@ export type Provider = "gemini" | "groq";
 export type AiFailureCategory = "quota" | "unavailable";
 export type CallModelResult<T> =
   | { ok: true; data: T; provider: Provider }
-  | { ok: false; category: AiFailureCategory };
+  | { ok: false; error: string; category: AiFailureCategory };
 
 type ProviderAttempt =
   | { ok: true; text: string }
@@ -107,10 +107,20 @@ async function requestGroq(prompt: string, timeoutMs: number): Promise<ProviderA
   }
 }
 
+function stripJsonFences(text: string): string {
+  const trimmed = text.trim();
+  if (trimmed.startsWith("```")) {
+    const start = trimmed.indexOf("\n");
+    const end = trimmed.lastIndexOf("```");
+    if (start !== -1 && end > start) return trimmed.slice(start + 1, end).trim();
+  }
+  return trimmed;
+}
+
 function validateJson<T>(text: string, schema: z.ZodType<T>): ValidationResult<T> {
   let parsed: unknown;
   try {
-    parsed = JSON.parse(text);
+    parsed = JSON.parse(stripJsonFences(text));
   } catch {
     return { ok: false, category: "invalid_json" };
   }
@@ -147,7 +157,7 @@ async function callProvider<T>(
       if (checked.ok) return { ok: true, data: checked.data, provider };
       lastCategory = checked.category;
       logProviderFailure(provider, attempt + 1, checked.category);
-      if (checked.category !== "invalid_json") break;
+      if (checked.category !== "invalid_json" && checked.category !== "invalid_output") break;
     }
 
     if (attempt === 0 && deadline - Date.now() > RETRY_DELAY_MS) {
@@ -157,7 +167,9 @@ async function callProvider<T>(
     break;
   }
 
-  return lastCategory === "quota" ? { ok: false, category: "quota" } : null;
+  return lastCategory === "quota"
+    ? { ok: false, error: "Free AI quota reached. Try again in a minute.", category: "quota" }
+    : null;
 }
 
 function logProviderFailure(provider: Provider, attempt: number, category: string): void {
@@ -166,6 +178,12 @@ function logProviderFailure(provider: Provider, attempt: number, category: strin
 
 /** Try Gemini, then Groq. Each provider gets at most one retry for approved failures. */
 export async function callModel<T>(prompt: string, schema: z.ZodType<T>): Promise<CallModelResult<T>> {
+  const hasGemini = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_MODEL);
+  const hasGroq = Boolean(process.env.GROQ_API_KEY && process.env.GROQ_MODEL);
+  if (!hasGemini && !hasGroq) {
+    return { ok: false, error: "AI providers are not configured.", category: "unavailable" };
+  }
+
   const deadline = Date.now() + TOTAL_TIMEOUT_MS;
   const gemini = await callProvider("gemini", prompt, schema, deadline);
   if (gemini?.ok) return gemini;
@@ -174,6 +192,9 @@ export async function callModel<T>(prompt: string, schema: z.ZodType<T>): Promis
   if (groq?.ok) return groq;
 
   return {
+    error: gemini?.category === "quota" && groq?.category === "quota"
+      ? "Free AI quota reached. Try again in a minute."
+      : "AI is unavailable. Please retry.",
     ok: false,
     category: gemini?.category === "quota" && groq?.category === "quota" ? "quota" : "unavailable",
   };
