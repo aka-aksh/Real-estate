@@ -96,7 +96,7 @@ describe("callModel", () => {
     vi.mocked(fetch).mockResolvedValue(groqResponse("", 503));
 
     const result = await callModel("prompt", AnswerSchema);
-    expect(result).toEqual({ ok: false, error: "AI is unavailable. Please retry.", category: "unavailable" });
+    expect(result).toEqual({ ok: false, error: "AI is unavailable. Please retry.", category: "unavailable", reason: "http_error", step: "groq" });
   });
 
   it("skips a missing provider key", async () => {
@@ -106,7 +106,7 @@ describe("callModel", () => {
     vi.stubEnv("GROQ_MODEL", "");
 
     const result = await callModel("prompt", AnswerSchema);
-    expect(result).toEqual({ ok: false, error: "AI providers are not configured.", category: "unavailable" });
+    expect(result).toEqual({ ok: false, error: "AI providers are not configured.", category: "unavailable", reason: "no_key", step: "configuration" });
     expect(generateContent).not.toHaveBeenCalled();
     expect(fetch).not.toHaveBeenCalled();
   });

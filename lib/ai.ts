@@ -3,13 +3,14 @@ import type { z } from "zod/v4";
 
 export type Provider = "gemini" | "groq";
 export type AiFailureCategory = "quota" | "unavailable";
+export type AiFailureReason = "timeout" | "http_error" | "invalid_json" | "zod_fail" | "no_key";
 export type CallModelResult<T> =
   | { ok: true; data: T; provider: Provider }
-  | { ok: false; error: string; category: AiFailureCategory };
+  | { ok: false; error: string; category: AiFailureCategory; reason: AiFailureReason; step: Provider | "configuration" };
 
 type ProviderAttempt =
   | { ok: true; text: string }
-  | { ok: false; category: "timeout" | "quota" | "server" | "invalid_json" | "invalid_output" | "provider_error" };
+  | { ok: false; category: "timeout" | "quota" | "server" | "invalid_json" | "invalid_output" | "provider_error" | "no_key" };
 type ProviderError = Extract<ProviderAttempt, { ok: false }>["category"];
 type ValidationResult<T> =
   | { ok: true; data: T }
@@ -35,7 +36,7 @@ function errorCategory(error: unknown): ProviderError {
 async function requestGemini(prompt: string, timeoutMs: number): Promise<ProviderAttempt> {
   const apiKey = process.env.GEMINI_API_KEY;
   const model = process.env.GEMINI_MODEL;
-  if (!apiKey || !model) return { ok: false, category: "provider_error" };
+  if (!apiKey || !model) return { ok: false, category: "no_key" };
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -62,7 +63,7 @@ async function requestGemini(prompt: string, timeoutMs: number): Promise<Provide
 async function requestGroq(prompt: string, timeoutMs: number): Promise<ProviderAttempt> {
   const apiKey = process.env.GROQ_API_KEY;
   const model = process.env.GROQ_MODEL;
-  if (!apiKey || !model) return { ok: false, category: "provider_error" };
+  if (!apiKey || !model) return { ok: false, category: "no_key" };
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -145,12 +146,12 @@ async function callProvider<T>(
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const remaining = deadline - Date.now();
-    if (remaining <= 0) return null;
+    if (remaining <= 0) return { ok: false, error: "AI is unavailable. Please retry.", category: "unavailable", reason: "timeout", step: provider };
     const result = await request(prompt, Math.min(PROVIDER_TIMEOUT_MS, remaining));
     if (!result.ok) {
       lastCategory = result.category;
       logProviderFailure(provider, attempt + 1, result.category);
-      if (result.category === "timeout") break;
+      if (result.category === "timeout" || result.category === "no_key") break;
       if (result.category !== "quota" && result.category !== "server") break;
     } else {
       const checked = validateJson(result.text, schema);
@@ -167,9 +168,17 @@ async function callProvider<T>(
     break;
   }
 
-  return lastCategory === "quota"
-    ? { ok: false, error: "Free AI quota reached. Try again in a minute.", category: "quota" }
-    : null;
+  return {
+    ok: false,
+    error: lastCategory === "quota" ? "Free AI quota reached. Try again in a minute." : "AI is unavailable. Please retry.",
+    category: lastCategory === "quota" ? "quota" : "unavailable",
+    reason: lastCategory === "timeout" ? "timeout"
+      : lastCategory === "invalid_json" ? "invalid_json"
+      : lastCategory === "invalid_output" ? "zod_fail"
+      : lastCategory === "no_key" ? "no_key"
+      : "http_error",
+    step: provider,
+  };
 }
 
 function logProviderFailure(provider: Provider, attempt: number, category: string): void {
@@ -181,21 +190,16 @@ export async function callModel<T>(prompt: string, schema: z.ZodType<T>): Promis
   const hasGemini = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_MODEL);
   const hasGroq = Boolean(process.env.GROQ_API_KEY && process.env.GROQ_MODEL);
   if (!hasGemini && !hasGroq) {
-    return { ok: false, error: "AI providers are not configured.", category: "unavailable" };
+    return { ok: false, error: "AI providers are not configured.", category: "unavailable", reason: "no_key", step: "configuration" };
   }
 
   const deadline = Date.now() + TOTAL_TIMEOUT_MS;
-  const gemini = await callProvider("gemini", prompt, schema, deadline);
+  const gemini = hasGemini ? await callProvider("gemini", prompt, schema, deadline) : null;
   if (gemini?.ok) return gemini;
 
-  const groq = await callProvider("groq", prompt, schema, deadline);
+  const groq = hasGroq ? await callProvider("groq", prompt, schema, deadline) : null;
   if (groq?.ok) return groq;
-
-  return {
-    error: gemini?.category === "quota" && groq?.category === "quota"
-      ? "Free AI quota reached. Try again in a minute."
-      : "AI is unavailable. Please retry.",
-    ok: false,
-    category: gemini?.category === "quota" && groq?.category === "quota" ? "quota" : "unavailable",
-  };
+  if (groq) return groq;
+  if (gemini) return gemini;
+  return { ok: false, error: "AI providers are not configured.", category: "unavailable", reason: "no_key", step: "configuration" };
 }

@@ -103,7 +103,7 @@ export type ChatMessage = z.infer<typeof ChatMessageSchema>;
 
 export const CommitmentSchema = z.object({
   id: z.string(),
-  owner: z.enum(["customer", "salesperson"]),
+  owner: z.enum(["customer", "salesperson", "unknown"]),
   action: z.string(),
   deadline_text: z.string().nullable(),
   deadline_iso: z.string().nullable(),

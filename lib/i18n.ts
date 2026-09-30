@@ -17,6 +17,7 @@ const enText = {
   loginTitle: "Sign in to Trust-Estate", demoCredentials: "Demo credentials: demo@trustestate.app / demo1234", email: "Email", password: "Password",
   signIn: "Sign in", continueDemo: "Continue as demo", authValidation: "Enter a valid email and a password with at least 6 characters.",
   sessionError: "Could not save this demo session. Check browser storage settings.", logout: "Log out", regenerateLanguage: "Regenerate in current language", regenerating: "Regenerating...",
+  pkFailureMessage: "Promise Keeper could not complete the request. Your lead and analysis are unchanged.", errorCode: "Error code", retry: "Retry",
 };
 
 export type TranslationKey = keyof typeof enText;
@@ -43,6 +44,7 @@ export const hi: Record<TranslationKey, string> = {
   loginTitle: "\u091f\u094d\u0930\u0938\u094d\u091f-\u090f\u0938\u094d\u091f\u0947\u091f \u092e\u0947\u0902 \u0938\u093e\u0907\u0928 \u0907\u0928 \u0915\u0930\u0947\u0902", demoCredentials: "\u0921\u0947\u092e\u094b: demo@trustestate.app / demo1234", email: "\u0908\u092e\u0947\u0932", password: "\u092a\u093e\u0938\u0935\u0930\u094d\u0921",
   signIn: "\u0938\u093e\u0907\u0928 \u0907\u0928", continueDemo: "\u0921\u0947\u092e\u094b \u0915\u0947 \u0930\u0942\u092a \u092e\u0947\u0902 \u091c\u093e\u0930\u0940 \u0930\u0916\u0947\u0902", authValidation: "\u0938\u0939\u0940 \u0908\u092e\u0947\u0932 \u0914\u0930 \u0915\u092e \u0938\u0947 \u0915\u092e 6 \u0905\u0915\u094d\u0937\u0930 \u0915\u093e \u092a\u093e\u0938\u0935\u0930\u094d\u0921 \u0926\u0930\u094d\u091c \u0915\u0930\u0947\u0902",
   sessionError: "\u0921\u0947\u092e\u094b \u0938\u0947\u0936\u0928 \u0938\u0947\u0935 \u0928\u0939\u0940\u0902 \u0939\u0941\u0906. \u092c\u094d\u0930\u093e\u0909\u091c\u093c\u0930 \u0938\u094d\u091f\u094b\u0930\u0947\u091c \u091c\u093e\u0902\u091a\u0947\u0902", logout: "\u0932\u0949\u0917 \u0906\u0909\u091f", regenerateLanguage: "\u0907\u0938\u0940 \u092d\u093e\u0937\u093e \u092e\u0947\u0902 \u092b\u093f\u0930 \u0938\u0947 \u092c\u0928\u093e\u090f\u0902", regenerating: "\u092b\u093f\u0930 \u0938\u0947 \u092c\u0928 \u0930\u0939\u093e \u0939\u0948...",
+  pkFailureMessage: "\u092a\u094d\u0930\u0949\u092e\u093f\u0938 \u0915\u0940\u092a\u0930 \u0905\u0928\u0941\u0930\u094b\u0927 \u092a\u0942\u0930\u093e \u0928\u0939\u0940\u0902 \u0915\u0930 \u0938\u0915\u093e. \u0932\u0940\u0921 \u0914\u0930 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0928\u0939\u0940\u0902 \u092c\u0926\u0932\u0947", errorCode: "\u0924\u094d\u0930\u0941\u091f\u093f \u0915\u094b\u0921", retry: "\u092b\u093f\u0930 \u0938\u0947 \u0915\u094b\u0936\u093f\u0936 \u0915\u0930\u0947\u0902",
 };
 
 const hinglishOverrides: Partial<Record<TranslationKey, string>> = {
@@ -53,6 +55,7 @@ const hinglishOverrides: Partial<Record<TranslationKey, string>> = {
   deleteLead: "Yeh lead delete karein?", cancel: "Cancel", delete: "Delete", status: "Status", hot: "Hot", warm: "Warm", cold: "Cold", unscored: "Unscored",
   loginTitle: "Trust-Estate mein sign in karein", email: "Email", password: "Password", signIn: "Sign in karein", continueDemo: "Demo ke roop mein continue karein",
   logout: "Log out", regenerateLanguage: "Current language mein regenerate karein", regenerating: "Regenerate ho raha hai...",
+  pkFailureMessage: "Promise Keeper request complete nahi hui. Lead aur analysis nahi badle.", errorCode: "Error code", retry: "Dobara try karein",
 };
 export const hinglish: Record<TranslationKey, string> = { ...en, ...hinglishOverrides };
 export const dictionaries = { en, hi, hinglish } satisfies Record<Language, Record<TranslationKey, string>>;

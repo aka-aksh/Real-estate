@@ -15,9 +15,10 @@ type Props = {
 const PK_ENABLED = process.env.NEXT_PUBLIC_PROMISE_KEEPER_ENABLED === "true";
 
 export default function PromiseKeeperPanel({ lead, onLeadUpdate }: Props) {
-  const { language } = useI18n();
+  const { language, t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errorCode, setErrorCode] = useState("");
   const [draftLoading, setDraftLoading] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [nowMs, setNowMs] = useState<number | null>(null);
@@ -38,6 +39,7 @@ export default function PromiseKeeperPanel({ lead, onLeadUpdate }: Props) {
   async function extractPromises() {
     setLoading(true);
     setError("");
+    setErrorCode("");
     try {
       const response = await fetch("/api/promises", {
         method: "POST",
@@ -50,15 +52,21 @@ export default function PromiseKeeperPanel({ lead, onLeadUpdate }: Props) {
       });
       const payload: unknown = await response.json().catch(() => null);
       const data = typeof payload === "object" && payload !== null ? payload as Record<string, unknown> : {};
-      if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "Promise Keeper unavailable. Retry.");
+      if (!response.ok || data.ok === false) {
+        const allowedCodes = ["flag_off", "rate_limited", "bad_request", "no_provider_key", "provider_timeout", "provider_error", "invalid_output", "unknown"];
+        setErrorCode(typeof data.code === "string" && allowedCodes.includes(data.code) ? data.code : "unknown");
+        setError(t("pkFailureMessage"));
+        return;
+      }
 
       const promiseKeeper = data.promiseKeeper as PromiseKeeperData;
       const updated = { ...lead, promiseKeeper };
       updateLead(lead.id, { promiseKeeper });
       onLeadUpdate(updated);
       showToast("Promises extracted");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Promise Keeper unavailable. Retry.");
+    } catch {
+      setErrorCode("unknown");
+      setError(t("pkFailureMessage"));
     } finally {
       setLoading(false);
     }
@@ -140,7 +148,7 @@ export default function PromiseKeeperPanel({ lead, onLeadUpdate }: Props) {
     return (
       <section className="rounded-lg border border-gray-200 bg-white p-4">
         <h2 className="mb-2 text-sm font-semibold text-gray-700">Promise Keeper</h2>
-        {error && <p role="alert" className="mb-2 text-sm text-red-700">{error}</p>}
+        {error && <div role="alert" className="mb-2 text-sm text-red-200"><p>{error}</p><small>{t("errorCode")}: {errorCode || "unknown"}</small><div><button onClick={extractPromises} disabled={loading} className="mt-1 underline disabled:opacity-50">{t("retry")}</button></div></div>}
         <button
           onClick={extractPromises}
           disabled={loading}
@@ -248,7 +256,7 @@ export default function PromiseKeeperPanel({ lead, onLeadUpdate }: Props) {
         </div>
       )}
 
-      {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
+      {error && <div role="alert" className="mt-2 text-sm text-red-200"><p>{error}</p><small>{t("errorCode")}: {errorCode || "unknown"}</small><div><button onClick={extractPromises} disabled={loading} className="mt-1 underline disabled:opacity-50">{t("retry")}</button></div></div>}
       <form onSubmit={addCommitment} className="mt-4 grid gap-2 rounded bg-gray-50 p-3 sm:grid-cols-[1fr_auto_auto_auto]">
         <input value={manualAction} onChange={(event) => setManualAction(event.target.value)} maxLength={300} required placeholder="Add a commitment" className="rounded border px-3 py-2 text-sm" />
         <select value={manualOwner} onChange={(event) => setManualOwner(event.target.value as "salesperson" | "customer")} className="rounded border px-2 text-sm"><option value="salesperson">Salesperson</option><option value="customer">Customer</option></select>
