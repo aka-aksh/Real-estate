@@ -96,7 +96,9 @@ export default function Dashboard() {
       <AddLeadModal
         open={showModal}
         onClose={() => setShowModal(false)}
-        onAdded={(lead) => setLeads((prev) => [...prev, lead])}
+        onAdded={(lead) => setLeads((prev) => prev.some((item) => item.id === lead.id)
+          ? prev.map((item) => item.id === lead.id ? lead : item)
+          : [...prev, lead])}
       />
     </div>
   );

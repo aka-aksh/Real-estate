@@ -28,7 +28,7 @@ export default function LeadCard({ lead }: Props) {
             {lead.form.location} · {lead.form.requirement}
           </p>
           <p className="mt-1 text-xs text-gray-400">
-            {lead.form.budget || "No budget"} · {lead.status}
+            {lead.form.budget || "No budget"} · {lead.analysis ? lead.status : "Analysis pending"}
           </p>
         </div>
         <ScoreBadge label={lead.score?.label ?? null} value={lead.score?.value} />

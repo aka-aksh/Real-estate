@@ -52,12 +52,12 @@ export type ScoreLabel = z.infer<typeof ScoreLabel>;
 // --- Nested schemas ---
 
 export const LeadFormSchema = z.object({
-  name: z.string().min(1),
-  location: z.string().min(1),
-  requirement: z.string().min(1),
+  name: z.string().trim().min(1),
+  location: z.string().trim().min(1),
+  requirement: z.string().trim().min(1),
   budget: z.string(),
   timeline: z.string(),
-  message: z.string().max(3000),
+  message: z.string().trim().min(5, "Enter a message of at least 5 characters").max(3000),
 });
 export type LeadForm = z.infer<typeof LeadFormSchema>;
 

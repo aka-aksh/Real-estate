@@ -2,15 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import type { Lead } from "@/types/lead";
-import { getLead } from "@/lib/storage";
+import { AnalysisSchema, ScoreSchema } from "@/types/lead";
+import type { Lead, LeadStatus } from "@/types/lead";
+import { getLead, updateLead } from "@/lib/storage";
 import ScoreBadge from "@/components/ScoreBadge";
+import StatusSelect from "@/components/StatusSelect";
+import { showToast } from "@/components/Toast";
 import Link from "next/link";
 
 export default function LeadDetailPage() {
   const params = useParams<{ id: string }>();
   const [lead, setLead] = useState<Lead | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const [analysisError, setAnalysisError] = useState("");
+  const [copyError, setCopyError] = useState("");
 
   useEffect(() => {
     if (params.id) {
@@ -19,6 +25,53 @@ export default function LeadDetailPage() {
     }
     setLoaded(true);
   }, [params.id]);
+
+  async function retryAnalysis() {
+    if (!lead) return;
+    setRetrying(true);
+    setAnalysisError("");
+    try {
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ form: lead.form }),
+      });
+      const payload: unknown = await response.json().catch(() => null);
+      const data = typeof payload === "object" && payload !== null ? payload as Record<string, unknown> : {};
+      if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "AI analysis unavailable. Please retry.");
+      const analysis = AnalysisSchema.safeParse(data.analysis);
+      const score = ScoreSchema.safeParse(data.score);
+      if (!analysis.success || !score.success) throw new Error("AI analysis unavailable. Please retry.");
+      const updated = { ...lead, analysis: analysis.data, score: score.data };
+      updateLead(updated.id, updated);
+      setLead(updated);
+      showToast("Analysis saved");
+    } catch (error) {
+      setAnalysisError(error instanceof Error ? error.message : "AI analysis unavailable. Please retry.");
+    } finally {
+      setRetrying(false);
+    }
+  }
+
+  function changeStatus(status: LeadStatus) {
+    if (!lead) return;
+    const updated = updateLead(lead.id, { status });
+    if (updated) {
+      setLead(updated);
+      showToast("Status updated");
+    }
+  }
+
+  async function copyDraft() {
+    if (!lead?.analysis) return;
+    setCopyError("");
+    try {
+      await navigator.clipboard.writeText(lead.analysis.suggested_response);
+      showToast("Draft copied");
+    } catch {
+      setCopyError("Could not copy the draft. Select and copy the text instead.");
+    }
+  }
 
   if (!loaded) {
     return <div className="py-12 text-center text-gray-400">Loading...</div>;
@@ -50,7 +103,7 @@ export default function LeadDetailPage() {
         ← Back to Dashboard
       </Link>
 
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
             {lead.form.name}
@@ -64,10 +117,10 @@ export default function LeadDetailPage() {
             {lead.form.location} · {lead.status}
           </p>
         </div>
-        <ScoreBadge
-          label={lead.score?.label ?? null}
-          value={lead.score?.value}
-        />
+        <div className="flex items-center gap-3">
+          <StatusSelect value={lead.status} onChange={changeStatus} />
+          <ScoreBadge label={lead.score?.label ?? null} value={lead.score?.value} />
+        </div>
       </div>
 
       {/* Original message */}
@@ -118,6 +171,10 @@ export default function LeadDetailPage() {
             <p className="mt-1 text-sm text-green-900">
               {lead.analysis.suggested_response}
             </p>
+            <button onClick={copyDraft} className="mt-2 rounded border border-green-700 px-3 py-1 text-xs font-medium text-green-800 hover:bg-green-100">
+              Copy draft
+            </button>
+            {copyError && <p role="alert" className="mt-1 text-xs text-red-700">{copyError}</p>}
           </div>
 
           {/* Score reasons */}
@@ -140,7 +197,14 @@ export default function LeadDetailPage() {
           <p className="mt-1 text-sm text-amber-600">
             AI analysis is not yet available for this lead.
           </p>
-          {/* Retry button will be wired in M2 */}
+          {analysisError && <p role="alert" className="mt-2 text-sm text-red-700">{analysisError}</p>}
+          <button
+            onClick={retryAnalysis}
+            disabled={retrying}
+            className="mt-3 rounded-lg bg-amber-700 px-4 py-2 text-sm font-medium text-white hover:bg-amber-800 disabled:opacity-50"
+          >
+            {retrying ? "Analyzing..." : "Retry analysis"}
+          </button>
         </section>
       )}
 
