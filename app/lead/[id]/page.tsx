@@ -61,6 +61,8 @@ export default function LeadDetailPage() {
     if (updated) {
       setLead(updated);
       showToast("Status updated");
+    } else {
+      showToast("Could not save status. Please try again.", "error");
     }
   }
 

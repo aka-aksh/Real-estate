@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Lead } from "@/types/lead";
-import { getLeads, saveLead, hasSeeded, markSeeded } from "@/lib/storage";
+import { getLeads, saveLead, hasSeeded, markSeeded, LEADS_CHANGED_EVENT } from "@/lib/storage";
 import { seedLeads } from "@/data/seed-leads";
 import LeadCard from "@/components/LeadCard";
 import AddLeadModal from "@/components/AddLeadModal";
@@ -22,6 +22,7 @@ export default function Dashboard() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    const refreshLeads = () => setLeads(getLeads());
     // Seed on first visit
     if (!hasSeeded()) {
       for (const lead of seedLeads) {
@@ -29,9 +30,19 @@ export default function Dashboard() {
       }
       markSeeded();
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage reads must happen in client effects, not during SSR
-    setLeads(getLeads());
+    refreshLeads();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial localStorage hydration gates the list until client data is ready
     setLoaded(true);
+    window.addEventListener("focus", refreshLeads);
+    window.addEventListener("storage", refreshLeads);
+    window.addEventListener(LEADS_CHANGED_EVENT, refreshLeads);
+    document.addEventListener("visibilitychange", refreshLeads);
+    return () => {
+      window.removeEventListener("focus", refreshLeads);
+      window.removeEventListener("storage", refreshLeads);
+      window.removeEventListener(LEADS_CHANGED_EVENT, refreshLeads);
+      document.removeEventListener("visibilitychange", refreshLeads);
+    };
   }, []);
 
   const hot = leads.filter((l) => l.score?.label === "Hot").length;
