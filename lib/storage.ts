@@ -25,7 +25,7 @@ export function getLead(id: string): Lead | null {
 export function saveLead(lead: Lead): void {
   const leads = getLeads();
   leads.push(lead);
-  localStorage.setItem(LEADS_KEY, JSON.stringify(leads));
+  try { localStorage.setItem(LEADS_KEY, JSON.stringify(leads)); } catch { /* storage may be unavailable or full */ }
 }
 
 /** Update an existing lead by ID. */
@@ -34,7 +34,7 @@ export function updateLead(id: string, updates: Partial<Lead>): Lead | null {
   const idx = leads.findIndex((l) => l.id === id);
   if (idx === -1) return null;
   leads[idx] = { ...leads[idx], ...updates };
-  localStorage.setItem(LEADS_KEY, JSON.stringify(leads));
+  try { localStorage.setItem(LEADS_KEY, JSON.stringify(leads)); } catch { return null; }
   return leads[idx];
 }
 
@@ -43,17 +43,17 @@ export function deleteLead(id: string): boolean {
   const leads = getLeads();
   const filtered = leads.filter((l) => l.id !== id);
   if (filtered.length === leads.length) return false;
-  localStorage.setItem(LEADS_KEY, JSON.stringify(filtered));
+  try { localStorage.setItem(LEADS_KEY, JSON.stringify(filtered)); } catch { return false; }
   return true;
 }
 
 /** Check whether seed data has already been loaded. */
 export function hasSeeded(): boolean {
   if (typeof window === "undefined") return true;
-  return localStorage.getItem(SEEDED_KEY) === "true";
+  try { return localStorage.getItem(SEEDED_KEY) === "true"; } catch { return true; }
 }
 
 /** Mark seed data as loaded. */
 export function markSeeded(): void {
-  localStorage.setItem(SEEDED_KEY, "true");
+  try { localStorage.setItem(SEEDED_KEY, "true"); } catch { /* demo data can be loaded again later */ }
 }

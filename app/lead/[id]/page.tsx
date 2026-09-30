@@ -7,6 +7,8 @@ import type { Lead, LeadStatus } from "@/types/lead";
 import { getLead, updateLead } from "@/lib/storage";
 import ScoreBadge from "@/components/ScoreBadge";
 import StatusSelect from "@/components/StatusSelect";
+import ChatPanel from "@/components/ChatPanel";
+import PromiseKeeperPanel from "@/components/PromiseKeeperPanel";
 import { showToast } from "@/components/Toast";
 import Link from "next/link";
 
@@ -144,49 +146,42 @@ export default function LeadDetailPage() {
       {lead.analysis ? (
         <section className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-700">
-              AI Analysis
-            </h2>
+            <h2 className="text-sm font-semibold text-gray-700">AI Analysis</h2>
             <span className="text-[10px] text-gray-400">
               via {lead.analysis.provider === "gemini" ? "Gemini" : "Groq"}
             </span>
           </div>
-          <p className="mb-3 text-sm text-gray-800">
-            {lead.analysis.lead_summary}
-          </p>
 
           <div className="mb-3 rounded bg-blue-50 p-3">
-            <p className="text-xs font-semibold text-blue-700">
-              Recommended Next Action
-            </p>
-            <p className="mt-1 text-sm text-blue-900">
-              {lead.analysis.recommended_next_action}
-            </p>
+            <p className="text-xs font-semibold text-blue-700">Recommended Next Action</p>
+            <p className="mt-1 text-sm text-blue-900">{lead.analysis.recommended_next_action}</p>
           </div>
 
-          <div className="rounded bg-green-50 p-3">
-            <p className="text-xs font-semibold text-green-700">
-              Suggested Response
-            </p>
-            <p className="mt-1 text-sm text-green-900">
-              {lead.analysis.suggested_response}
-            </p>
+          <div className="space-y-2 text-sm">
+            <div><span className="font-medium text-gray-600">Lead summary:</span> <span className="text-gray-800">{lead.analysis.lead_summary}</span></div>
+            <div><span className="font-medium text-gray-600">Customer intent:</span> <span className="text-gray-800 capitalize">{lead.analysis.customer_intent}</span></div>
+            {lead.analysis.key_requirements.length > 0 && (
+              <div><span className="font-medium text-gray-600">Key requirements:</span> <span className="text-gray-800">{lead.analysis.key_requirements.join(", ")}</span></div>
+            )}
+            {lead.analysis.objections.length > 0 && (
+              <div><span className="font-medium text-gray-600">Objections/concerns:</span> <span className="text-gray-800">{lead.analysis.objections.join(", ")}</span></div>
+            )}
+          </div>
+
+          <div className="mt-3 rounded bg-green-50 p-3">
+            <p className="text-xs font-semibold text-green-700">Suggested Response</p>
+            <p className="mt-1 text-sm text-green-900">{lead.analysis.suggested_response}</p>
             <button onClick={copyDraft} className="mt-2 rounded border border-green-700 px-3 py-1 text-xs font-medium text-green-800 hover:bg-green-100">
               Copy draft
             </button>
             {copyError && <p role="alert" className="mt-1 text-xs text-red-700">{copyError}</p>}
           </div>
 
-          {/* Score reasons */}
           {lead.score && (
             <div className="mt-4">
-              <p className="text-xs font-semibold text-gray-600">
-                Score Reasons
-              </p>
+              <p className="text-xs font-semibold text-gray-600">Score Reasons</p>
               <ul className="mt-1 list-inside list-disc text-sm text-gray-700">
-                {lead.score.reasons.map((r, i) => (
-                  <li key={i}>{r}</li>
-                ))}
+                {lead.score.reasons.map((r, i) => (<li key={i}>{r}</li>))}
               </ul>
             </div>
           )}
@@ -194,9 +189,7 @@ export default function LeadDetailPage() {
       ) : (
         <section className="mb-6 rounded-lg border border-dashed border-amber-300 bg-amber-50 p-4 text-center">
           <p className="font-medium text-amber-700">Analysis pending</p>
-          <p className="mt-1 text-sm text-amber-600">
-            AI analysis is not yet available for this lead.
-          </p>
+          <p className="mt-1 text-sm text-amber-600">AI analysis is not yet available for this lead.</p>
           {analysisError && <p role="alert" className="mt-2 text-sm text-red-700">{analysisError}</p>}
           <button
             onClick={retryAnalysis}
@@ -208,7 +201,16 @@ export default function LeadDetailPage() {
         </section>
       )}
 
-      {/* Chat and Promise Keeper stubs will be added in M3/M4 */}
+      {/* Promise Keeper */}
+      <div className="mb-6">
+        <PromiseKeeperPanel lead={lead} onLeadUpdate={setLead} />
+      </div>
+
+      {/* Chat */}
+      <div className="mb-6">
+        <ChatPanel lead={lead} onLeadUpdate={setLead} />
+      </div>
     </div>
   );
 }
+

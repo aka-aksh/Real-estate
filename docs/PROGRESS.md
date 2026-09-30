@@ -12,8 +12,8 @@
 - Decisions: eslint-disable for localStorage setState-in-effect (legitimate SSR constraint); seed leads use non-UUID IDs (prefixed "seed-") for easy identification; scoring.ts ready but not yet called by real AI (M2)
 - All commands pass: lint ✅, test ✅, build ✅
 
-Current milestone: M2 (implementation complete; provider verification pending)
-Next: Confirm both provider calls from a network that can reach their APIs, then continue to M3.
+Current milestone: M5 complete
+Provider verification: Owner reports both configured model names returned JSON in JSON mode in their own terminal. Not repeated in this network-restricted sandbox.
 
 ## M1 deployment debugging
 - Vercel dependency resolution failed because Vitest 5 requires `@types/node` `^22.0.0 || >=24.0.0`, while the project requested major 20.
@@ -25,5 +25,22 @@ Next: Confirm both provider calls from a network that can reach their APIs, then
 - Added `/api/analyze` with request validation, in-memory rate limiting, Node runtime and 30-second route duration; scoring stays in code.
 - New leads are saved before analysis, keep their form data on failure, and show Analysis pending with Retry. Lead detail supports retry, status updates, and Copy draft.
 - Added project profile and analysis prompt, plus scoring and provider fallback tests.
-- Minimal real calls using the configured model names both failed with category `network_or_timeout`; no model name failure was returned, so no model list or replacement was indicated.
 - `npm run lint` passed; `npm test` passed (8 tests); production build passed using `MASAL_NEXT_DIST_DIR=.next/m2-validation` to avoid OneDrive reparse-point locks and with network access for the existing Google Fonts. The default `.next` build directory remains locked by OneDrive in this workspace.
+
+## M3 (grounded chat)
+- Added per-lead chat API and UI; chat stays disabled until core analysis exists and stores history with the selected lead.
+- Chat uses only the selected lead, its analysis and commitments, project profile, and the recent conversation. The API validates the request and `{answer}` output.
+- Retry reuses a failed question instead of duplicating it; context is capped at six recent messages.
+
+## M4a (Promise Keeper logic)
+- Added separate commitment extraction and follow-up draft routes with the shared model fallback, Zod validation, request limiting, and feature-flag checks.
+- Deadline status is computed in code; unit tests cover completed, vague, overdue, due-soon, pending, timezone parsing, invalid dates, and priority ordering.
+
+## M4b (Promise Keeper UI)
+- Added commitment extraction, manual add/remove, completion tracking, buyer mood, contradictions, contact window, copyable follow-up drafts, and a kept-promises count.
+- Today prioritizes overdue, then due-soon, then remaining commitments, using score to break ties. With the flag off, it shows the score-ranked lead list.
+- Promise Keeper failures stay separate from core analysis. The disabled UI renders nothing.
+
+## M5 (handoff)
+- Replaced the starter README with architecture, AI/fallback behavior, setup, decisions, limitations, feature-flag, and AI-disclosure sections; added a three-minute demo script.
+- Added app-level error and not-found pages and guarded localStorage reads/writes against unavailable or full storage.
