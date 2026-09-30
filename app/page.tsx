@@ -6,6 +6,7 @@ import { getLeads, saveLead, hasSeeded, markSeeded, LEADS_CHANGED_EVENT } from "
 import { seedLeads } from "@/data/seed-leads";
 import LeadCard from "@/components/LeadCard";
 import AddLeadModal from "@/components/AddLeadModal";
+import { showToast } from "@/components/Toast";
 
 /** Sort: Hot first (by score desc), then Warm, Cold, Unscored last. */
 function sortLeads(leads: Lead[]): Lead[] {
@@ -20,6 +21,15 @@ export default function Dashboard() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [loaded, setLoaded] = useState(false);
+
+  function restoreSamples() {
+    const existingIds = new Set(getLeads().map((lead) => lead.id));
+    for (const sample of seedLeads) {
+      if (!existingIds.has(sample.id)) saveLead(sample);
+    }
+    setLeads(getLeads());
+    showToast("Sample leads restored");
+  }
 
   useEffect(() => {
     const refreshLeads = () => setLeads(getLeads());
@@ -67,6 +77,12 @@ export default function Dashboard() {
           + Add Lead
         </button>
       </div>
+
+      {!leads.some((lead) => lead.isSample) && (
+        <button onClick={restoreSamples} className="mb-5 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+          Restore sample leads
+        </button>
+      )}
 
       {/* Score summary cards */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">

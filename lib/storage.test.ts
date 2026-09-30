@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Lead } from "@/types/lead";
-import { LEADS_CHANGED_EVENT, getLeads, saveLead, updateLead } from "@/lib/storage";
+import { LEADS_CHANGED_EVENT, deleteLead, getLeads, hasSeeded, markSeeded, saveLead, updateLead } from "@/lib/storage";
 
 describe("lead storage events", () => {
   let values: Map<string, string>;
@@ -33,5 +33,18 @@ describe("lead storage events", () => {
     expect(getLeads()[0]?.status).toBe("Contacted");
     expect(dispatchEvent).toHaveBeenCalledTimes(1);
     expect(dispatchEvent.mock.calls[0]?.[0]).toMatchObject({ type: LEADS_CHANGED_EVENT });
+  });
+
+  it("deletes one lead without resetting the seed flag or changing other leads", () => {
+    const sample = { ...lead, id: "sample-lead", isSample: true };
+    const realLead = { ...lead, id: "real-lead", form: { ...lead.form, name: "Real" } };
+    saveLead(sample);
+    saveLead(realLead);
+    markSeeded();
+
+    expect(deleteLead(sample.id)).toBe(true);
+
+    expect(hasSeeded()).toBe(true);
+    expect(getLeads().map((item) => item.id)).toEqual([realLead.id]);
   });
 });

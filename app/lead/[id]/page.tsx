@@ -1,24 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { AnalysisSchema, ScoreSchema } from "@/types/lead";
 import type { Lead, LeadStatus } from "@/types/lead";
-import { getLead, updateLead } from "@/lib/storage";
+import { deleteLead, getLead, updateLead } from "@/lib/storage";
 import ScoreBadge from "@/components/ScoreBadge";
 import StatusSelect from "@/components/StatusSelect";
 import ChatPanel from "@/components/ChatPanel";
 import PromiseKeeperPanel from "@/components/PromiseKeeperPanel";
 import { showToast } from "@/components/Toast";
 import Link from "next/link";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 export default function LeadDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const [lead, setLead] = useState<Lead | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [analysisError, setAnalysisError] = useState("");
   const [copyError, setCopyError] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (params.id) {
@@ -64,6 +67,18 @@ export default function LeadDetailPage() {
     } else {
       showToast("Could not save status. Please try again.", "error");
     }
+  }
+
+  function confirmDeleteLead() {
+    if (!lead) return;
+    if (!deleteLead(lead.id)) {
+      showToast("Could not delete lead. Please try again.", "error");
+      setConfirmDelete(false);
+      return;
+    }
+    setConfirmDelete(false);
+    showToast("Lead deleted");
+    router.push("/");
   }
 
   async function copyDraft() {
@@ -124,6 +139,7 @@ export default function LeadDetailPage() {
         <div className="flex items-center gap-3">
           <StatusSelect value={lead.status} onChange={changeStatus} />
           <ScoreBadge label={lead.score?.label ?? null} value={lead.score?.value} />
+          <button onClick={() => setConfirmDelete(true)} aria-label="Delete this lead" className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-500">Delete</button>
         </div>
       </div>
 
@@ -212,6 +228,7 @@ export default function LeadDetailPage() {
       <div className="mb-6">
         <ChatPanel lead={lead} onLeadUpdate={setLead} />
       </div>
+      <ConfirmDialog open={confirmDelete} onCancel={() => setConfirmDelete(false)} onConfirm={confirmDeleteLead} />
     </div>
   );
 }
