@@ -2,11 +2,13 @@ import { z } from "zod/v4";
 import { callModel } from "@/lib/ai";
 import { takeRateLimit } from "@/lib/rateLimit";
 import { projectProfile } from "@/lib/project-profile";
+import { withLanguageInstruction } from "@/lib/prompts";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
 const ChatRequestSchema = z.object({
+  language: z.enum(["en", "hi", "hinglish"]).default("en"),
   question: z.string().trim().min(1).max(500),
   lead: z.object({
     form: z.object({
@@ -40,13 +42,14 @@ const ChatResponseSchema = z.object({ answer: z.string() });
 function buildChatPrompt(
   question: string,
   lead: z.infer<typeof ChatRequestSchema>["lead"],
+  language: "en" | "hi" | "hinglish",
 ): string {
   const history = lead.chat
     .slice(-6)
     .map((m) => `${m.role === "user" ? "Salesperson" : "Assistant"}: ${m.text}`)
     .join("\n");
 
-  return `You are a helpful assistant for a real-estate salesperson in India. Answer questions about ONE specific lead using ONLY the data below and the project profile. Never invent facts, prices, availability, or approvals not in the project profile. If unsure, say "verify with the project team".
+  const prompt = `You are a helpful assistant for a real-estate salesperson in India. Answer questions about ONE specific lead using ONLY the data below and the project profile. Never invent facts, prices, availability, or approvals not in the project profile. If unsure, say "verify with the project team".
 
 Respond with JSON: {"answer": "your answer here"}. Match the customer's language (English or Hinglish). Be concise, practical, and honest.
 
@@ -63,6 +66,7 @@ CONVERSATION_HISTORY:
 ${history || "(none)"}
 
 SALESPERSON_QUESTION: ${question}`;
+  return withLanguageInstruction(prompt, language);
 }
 
 function clientKey(request: Request): string {
@@ -87,7 +91,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const result = await callModel(
-    buildChatPrompt(parsed.data.question, parsed.data.lead),
+    buildChatPrompt(parsed.data.question, parsed.data.lead, parsed.data.language),
     ChatResponseSchema,
   );
 

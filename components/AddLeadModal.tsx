@@ -25,7 +25,7 @@ const emptyForm: LeadForm = {
 };
 
 export default function AddLeadModal({ open, onClose, onAdded, prefill }: Props) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [form, setForm] = useState<LeadForm>({ ...emptyForm });
   const [pastedBlock, setPastedBlock] = useState("");
   const [pasteError, setPasteError] = useState("");
@@ -98,7 +98,7 @@ export default function AddLeadModal({ open, onClose, onAdded, prefill }: Props)
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ form: result.data }),
+        body: JSON.stringify({ form: result.data, language }),
       });
       const body: unknown = await response.json().catch(() => null);
       const payload = typeof body === "object" && body !== null ? body as Record<string, unknown> : {};

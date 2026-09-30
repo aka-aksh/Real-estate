@@ -8,7 +8,7 @@ import { AnalysisSchema, LeadFormSchema } from "@/types/lead";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-const RequestSchema = z.object({ form: LeadFormSchema });
+const RequestSchema = z.object({ form: LeadFormSchema, language: z.enum(["en", "hi", "hinglish"]).default("en") });
 const AnalysisContentSchema = AnalysisSchema.omit({ provider: true });
 
 function clientKey(request: Request): string {
@@ -31,7 +31,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: "Please check the lead details and try again." }, { status: 400 });
   }
 
-  const result = await callModel(buildAnalysisPrompt(parsed.data.form), AnalysisContentSchema);
+  const result = await callModel(buildAnalysisPrompt(parsed.data.form, parsed.data.language), AnalysisContentSchema);
   if (!result.ok) {
     return Response.json(
       { error: result.category === "quota" ? "Free AI quota reached. Try again in a minute." : "AI analysis unavailable. Please retry." },

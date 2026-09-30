@@ -5,6 +5,7 @@ import type { Lead, Commitment, PromiseKeeperData } from "@/types/lead";
 import { updateLead } from "@/lib/storage";
 import { computeCommitmentStatus, statusLabel, statusColor } from "@/features/promiseKeeper/status";
 import { showToast } from "./Toast";
+import { useI18n } from "@/components/LanguageProvider";
 
 type Props = {
   lead: Lead;
@@ -14,6 +15,7 @@ type Props = {
 const PK_ENABLED = process.env.NEXT_PUBLIC_PROMISE_KEEPER_ENABLED === "true";
 
 export default function PromiseKeeperPanel({ lead, onLeadUpdate }: Props) {
+  const { language } = useI18n();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [draftLoading, setDraftLoading] = useState<string | null>(null);
@@ -41,6 +43,7 @@ export default function PromiseKeeperPanel({ lead, onLeadUpdate }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          language,
           form: lead.form,
           analysis: lead.analysis ? { lead_summary: lead.analysis.lead_summary, customer_intent: lead.analysis.customer_intent } : null,
         }),
@@ -103,6 +106,7 @@ export default function PromiseKeeperPanel({ lead, onLeadUpdate }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          language,
           commitment: { owner: commitment.owner, action: commitment.action, deadline_text: commitment.deadline_text, vague: commitment.vague },
           buyerMood: pk?.buyer_mood ?? null,
           customerName: lead.form.name,

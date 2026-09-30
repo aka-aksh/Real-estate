@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Lead, ChatMessage } from "@/types/lead";
 import { updateLead } from "@/lib/storage";
+import { useI18n } from "@/components/LanguageProvider";
 
 type Props = {
   lead: Lead;
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export default function ChatPanel({ lead, onLeadUpdate }: Props) {
+  const { language } = useI18n();
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -44,6 +46,7 @@ export default function ChatPanel({ lead, onLeadUpdate }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          language,
           question: q,
           lead: {
             form: lead.form,

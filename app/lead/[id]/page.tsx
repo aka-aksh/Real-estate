@@ -18,7 +18,7 @@ import { leadStatusKeys } from "@/lib/i18n";
 export default function LeadDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [lead, setLead] = useState<Lead | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [retrying, setRetrying] = useState(false);
@@ -42,7 +42,7 @@ export default function LeadDetailPage() {
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ form: lead.form }),
+        body: JSON.stringify({ form: lead.form, language }),
       });
       const payload: unknown = await response.json().catch(() => null);
       const data = typeof payload === "object" && payload !== null ? payload as Record<string, unknown> : {};
@@ -195,6 +195,10 @@ export default function LeadDetailPage() {
             <button onClick={copyDraft} className="mt-2 rounded border border-green-700 px-3 py-1 text-xs font-medium text-green-800 hover:bg-green-100">
               Copy draft
             </button>
+            <button onClick={retryAnalysis} disabled={retrying} className="ml-2 mt-2 rounded border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 disabled:opacity-50">
+              {retrying ? "Regenerating..." : "Regenerate in current language"}
+            </button>
+            {analysisError && <p role="alert" className="mt-1 text-xs text-red-700">{analysisError}</p>}
             {copyError && <p role="alert" className="mt-1 text-xs text-red-700">{copyError}</p>}
           </div>
 
