@@ -90,7 +90,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-7 pb-24 md:pb-0">
       <section className="dashboard-hero relative isolate -mx-4 overflow-hidden px-4 py-8 sm:-mx-6 sm:rounded-3xl sm:px-7 sm:py-10">
         <div className="relative z-10 grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
           <div className="max-w-2xl">
@@ -98,7 +98,7 @@ export default function Dashboard() {
             <h1 className="text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-6xl">{t("headline")}</h1>
             <p className="mt-4 max-w-xl text-base leading-7 text-slate-200 sm:text-lg">{t("heroSupport")}</p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <button onClick={() => setShowModal(true)} className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 shadow-xl transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-300">{t("addLead")}</button>
+              <AddLeadButton onClick={() => setShowModal(true)} label={t("addLeadAction")} />
               <a href="/inbox" className="rounded-xl border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition duration-200 hover:bg-white/15">{t("inboxButton")}</a>
             </div>
             <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/20 px-3 py-1.5 text-xs text-slate-100 backdrop-blur"><span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_#34d399]" />{t("demoReady")}</p>
@@ -118,7 +118,11 @@ export default function Dashboard() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-bold text-white">{t("dashboard")}</h2>
-        {sourceUrl && <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">{t("openDatabase")}</a>}
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm text-slate-400">{leads.length} {t("leadCount")}</span>
+          {sourceUrl && <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">{t("openDatabase")}</a>}
+          <AddLeadButton onClick={() => setShowModal(true)} label={t("addLeadAction")} className="hidden md:inline-flex" />
+        </div>
       </div>
 
       {!leads.some((lead) => lead.isSample) && (
@@ -151,6 +155,7 @@ export default function Dashboard() {
       {sorted.length === 0 ? (
         <div className="rounded-lg border border-dashed border-gray-300 py-12 text-center">
           <p className="text-gray-300">{t("leadsEmpty")}</p>
+          <AddLeadButton onClick={() => setShowModal(true)} label={t("addLeadAction")} className="mx-auto mt-5" />
         </div>
       ) : (
         <div className="space-y-2">
@@ -168,8 +173,16 @@ export default function Dashboard() {
           ? prev.map((item) => item.id === lead.id ? lead : item)
           : [...prev, lead])}
       />
+      <AddLeadButton onClick={() => setShowModal(true)} label={t("addLeadAction")} className="mobile-add-lead-fab md:hidden" />
     </div>
   );
+}
+
+function AddLeadButton({ onClick, label, className = "" }: { onClick: () => void; label: string; className?: string }) {
+  return <button type="button" onClick={onClick} aria-label={label} className={`primary-add-lead inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-base font-bold shadow-lg transition duration-200 hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200 ${className}`}>
+    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-5 w-5 shrink-0"><path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+    <span className={className.includes("mobile-add-lead-fab") ? "fab-label" : undefined}>{label}</span>
+  </button>;
 }
 
 function GlanceCount({ label, count, color }: { label: string; count: number; color: string }) {

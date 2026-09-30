@@ -1,6 +1,6 @@
 const enText = {
   dashboard: "Dashboard", today: "Today", leadInbox: "Lead inbox", openDatabase: "Open leads database",
-  addLead: "Add a lead", headline: "Your leads. Ranked. Actionable.", heroSupport: "Know who needs attention and what to do next.",
+  addLead: "Add a lead", addLeadAction: "Add lead", leadCount: "leads", headline: "Your leads. Ranked. Actionable.", heroSupport: "Know who needs attention and what to do next.",
   demoReady: "Ready for your next conversation", todayGlance: "Today at a glance", locations: "Leads from",
   inboundTitle: "Lead inbox", inboundSupport: "Choose an inquiry to prefill the lead form.", copy: "Copy", copied: "Copied",
   useLead: "Use this lead", copyFailed: "Copy failed. Select and copy the lead details.", noLeads: "No sample inquiries available.",
@@ -27,7 +27,7 @@ export type Language = "en" | "hi" | "hinglish";
 export const en: Record<TranslationKey, string> = enText;
 export const hi: Record<TranslationKey, string> = {
   dashboard: "\u0921\u0948\u0936\u092c\u094b\u0930\u094d\u0921", today: "\u0906\u091c", leadInbox: "\u0932\u0940\u0921 \u0907\u0928\u092c\u0949\u0915\u094d\u0938", openDatabase: "\u0932\u0940\u0921 \u0921\u0947\u091f\u093e\u092c\u0947\u0938 \u0916\u094b\u0932\u0947\u0902",
-  addLead: "\u0932\u0940\u0921 \u091c\u094b\u0921\u093c\u0947\u0902", headline: "\u0906\u092a\u0915\u0940 \u0932\u0940\u0921\u094d\u0938, \u092a\u094d\u0930\u093e\u0925\u092e\u093f\u0915\u0924\u093e \u0915\u0947 \u0938\u093e\u0925", heroSupport: "\u091c\u093e\u0928\u0947\u0902 \u0915\u093f\u0938\u0947 \u0927\u094d\u092f\u093e\u0928 \u091a\u093e\u0939\u093f\u090f \u0914\u0930 \u0905\u0917\u0932\u093e \u0915\u0926\u092e \u0915\u094d\u092f\u093e \u0939\u0948",
+  addLead: "\u0932\u0940\u0921 \u091c\u094b\u0921\u093c\u0947\u0902", addLeadAction: "\u0932\u0940\u0921 \u091c\u094b\u0921\u093c\u0947\u0902", leadCount: "\u0932\u0940\u0921", headline: "\u0906\u092a\u0915\u0940 \u0932\u0940\u0921\u094d\u0938, \u092a\u094d\u0930\u093e\u0925\u092e\u093f\u0915\u0924\u093e \u0915\u0947 \u0938\u093e\u0925", heroSupport: "\u091c\u093e\u0928\u0947\u0902 \u0915\u093f\u0938\u0947 \u0927\u094d\u092f\u093e\u0928 \u091a\u093e\u0939\u093f\u090f \u0914\u0930 \u0905\u0917\u0932\u093e \u0915\u0926\u092e \u0915\u094d\u092f\u093e \u0939\u0948",
   demoReady: "\u0905\u0917\u0932\u0940 \u092c\u093e\u0924\u091a\u0940\u0924 \u0915\u0947 \u0932\u093f\u090f \u0924\u0948\u092f\u093e\u0930", todayGlance: "\u0906\u091c \u0915\u0940 \u091d\u0932\u0915", locations: "\u0932\u0940\u0921 \u0915\u0947 \u0936\u0939\u0930",
   inboundTitle: "\u0932\u0940\u0921 \u0907\u0928\u092c\u0949\u0915\u094d\u0938", inboundSupport: "\u0932\u0940\u0921 \u092b\u093c\u0949\u0930\u094d\u092e \u092d\u0930\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u090f\u0915 \u092a\u0942\u091b\u0924\u093e\u091b \u091a\u0941\u0928\u0947\u0902", copy: "\u0915\u0949\u092a\u0940", copied: "\u0915\u0949\u092a\u0940 \u0939\u094b \u0917\u092f\u093e",
   useLead: "\u0907\u0938 \u0932\u0940\u0921 \u0915\u093e \u0909\u092a\u092f\u094b\u0917 \u0915\u0930\u0947\u0902", copyFailed: "\u0915\u0949\u092a\u0940 \u0928\u0939\u0940\u0902 \u0939\u0941\u0906. \u0932\u0940\u0921 \u0915\u0940 \u0935\u093f\u0935\u0930\u0923\u0940 \u091a\u0941\u0928\u0915\u0930 \u0915\u0949\u092a\u0940 \u0915\u0930\u0947\u0902", noLeads: "\u0915\u094b\u0908 \u0928\u092e\u0942\u0928\u093e \u092a\u0942\u091b\u0924\u093e\u091b \u0909\u092a\u0932\u092c\u094d\u0927 \u0928\u0939\u0940\u0902",
@@ -48,7 +48,7 @@ export const hi: Record<TranslationKey, string> = {
 };
 
 const hinglishOverrides: Partial<Record<TranslationKey, string>> = {
-  dashboard: "Dashboard", today: "Aaj", leadInbox: "Lead inbox", addLead: "Lead add karein", headline: "Aapki leads, ranked aur ready for action.",
+  dashboard: "Dashboard", today: "Aaj", leadInbox: "Lead inbox", addLead: "Lead add karein", addLeadAction: "Lead add karein", leadCount: "leads", headline: "Aapki leads, ranked aur ready for action.",
   heroSupport: "Jaanein kisko attention chahiye aur next step kya hai.", demoReady: "Agli conversation ke liye ready", todayGlance: "Aaj ka overview", locations: "Leads ke shehar",
   inboundTitle: "Lead inbox", inboundSupport: "Form prefill karne ke liye inquiry choose karein.", copy: "Copy", copied: "Copied", useLead: "Is lead ko use karein",
   pasteLead: "Lead paste karein", pasteApply: "Row se form bharein", sampleRestored: "Sample leads restore ho gaye", restoreSamples: "Sample leads restore karein",
