@@ -44,3 +44,9 @@ Provider verification: Owner reports both configured model names returned JSON i
 ## M5 (handoff)
 - Replaced the starter README with architecture, AI/fallback behavior, setup, decisions, limitations, feature-flag, and AI-disclosure sections; added a three-minute demo script.
 - Added app-level error and not-found pages and guarded localStorage reads/writes against unavailable or full storage.
+
+## Trust-Estate continuation (Phases 5–7)
+- Phase 5: dashboard refreshes after lead writes, tab focus/visibility changes, and cross-tab storage events. Status write failures show an error; status is visible in the dashboard row. Root cause was a one-time dashboard localStorage read with no subscription.
+- Phase 6: lead rows and detail pages support confirmed deletion; sample deletion preserves the seed flag. Restore sample leads re-adds missing seed IDs without changing real leads.
+- Phase 7: added the built-in Lead inbox, clipboard copy, one-time sessionStorage prefill, spreadsheet-row parser, optional validated leads-source link, dark dashboard hero, and English/Hindi/Hinglish strings for the new surfaces.
+- Note: this checkout did not contain the earlier Trust-Estate rename, demo-login, full dark UI, or AI prompt-language phases. Those are not represented as completed here; demo login and AI response-language controls remain absent.

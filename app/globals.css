@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0b0f19;
+  --foreground: #f8fafc;
+  --surface: #111827;
+  --surface-raised: #161d2e;
+  --accent: #34d399;
+  --accent-strong: #10b981;
 }
 
 @theme inline {
@@ -12,15 +16,48 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+}
+
+.bg-white { background-color: var(--surface) !important; }
+.bg-gray-50 { background-color: var(--background) !important; }
+.bg-gray-100 { background-color: var(--surface-raised) !important; }
+.text-gray-900 { color: #f8fafc !important; }
+.text-gray-800, .text-gray-700, .text-gray-600 { color: #cbd5e1 !important; }
+.text-gray-500, .text-gray-400 { color: #94a3b8 !important; }
+.border-gray-200, .border-gray-300 { border-color: rgb(255 255 255 / 0.12) !important; }
+.bg-blue-600 { background: linear-gradient(135deg, #10b981, #14b8a6) !important; color: #052e2b !important; }
+.hover\:bg-blue-700:hover { background: linear-gradient(135deg, #059669, #0f766e) !important; color: white !important; }
+
+.dashboard-hero::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  background-image:
+    linear-gradient(180deg, rgb(2 6 23 / 0.22) 0%, rgb(2 6 23 / 0.72) 58%, #0b0f19 100%),
+    url("/hero.jpg"),
+    radial-gradient(ellipse at 18% 20%, rgb(16 185 129 / 0.35), transparent 45%),
+    radial-gradient(ellipse at 83% 14%, rgb(20 184 166 / 0.18), transparent 42%),
+    linear-gradient(135deg, #102b2b, #0b0f19 72%);
+  background-position: center;
+  background-size: cover;
+}
+.dashboard-hero {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: max(1rem, calc((100vw - 80rem) / 2 + 1.5rem));
+  padding-right: max(1rem, calc((100vw - 80rem) / 2 + 1.5rem));
+}
+@media (min-width: 640px) { .dashboard-hero { border-radius: 1.5rem; } }
+
+:focus-visible { outline-color: var(--accent); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }

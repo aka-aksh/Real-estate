@@ -1,15 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnalysisSchema, LeadFormSchema, ScoreSchema } from "@/types/lead";
 import type { Lead, LeadForm } from "@/types/lead";
 import { getLead, saveLead, updateLead } from "@/lib/storage";
 import { showToast } from "./Toast";
+import { parsePastedLeadRow } from "@/lib/leadParser";
+import { useI18n } from "@/components/LanguageProvider";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   onAdded: (lead: Lead) => void;
+  prefill?: LeadForm | null;
 };
 
 const emptyForm: LeadForm = {
@@ -21,12 +24,22 @@ const emptyForm: LeadForm = {
   message: "",
 };
 
-export default function AddLeadModal({ open, onClose, onAdded }: Props) {
+export default function AddLeadModal({ open, onClose, onAdded, prefill }: Props) {
+  const { t } = useI18n();
   const [form, setForm] = useState<LeadForm>({ ...emptyForm });
+  const [pastedBlock, setPastedBlock] = useState("");
+  const [pasteError, setPasteError] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [analysisError, setAnalysisError] = useState("");
   const [pendingLeadId, setPendingLeadId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open && prefill) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- parent provides the one-time inbox prefill after client navigation
+      setForm(prefill);
+    }
+  }, [open, prefill]);
 
   if (!open) return null;
 
@@ -34,6 +47,17 @@ export default function AddLeadModal({ open, onClose, onAdded }: Props) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
     setAnalysisError("");
+  }
+
+  function applyPastedRow() {
+    const parsed = parsePastedLeadRow(pastedBlock);
+    if (!parsed) {
+      setPasteError(t("pasteInvalid"));
+      return;
+    }
+    setForm(parsed);
+    setErrors({});
+    setPasteError("");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -120,13 +144,20 @@ export default function AddLeadModal({ open, onClose, onAdded }: Props) {
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl">
-        <h2 className="mb-4 text-lg font-bold text-gray-900">Add New Lead</h2>
+        <h2 className="mb-4 text-lg font-bold text-gray-900">{t("addLeadTitle")}</h2>
         {analysisError && (
           <div role="alert" className="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
             <p>{analysisError} The lead is saved as Analysis pending; your entries are kept.</p>
           </div>
         )}
         <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="rounded-lg border border-gray-200 p-3">
+            <label htmlFor="paste-lead-row" className="mb-1 block text-sm font-medium text-gray-700">{t("pasteLead")}</label>
+            <p className="mb-2 text-xs text-gray-500">{t("pasteHint")}</p>
+            <textarea id="paste-lead-row" value={pastedBlock} onChange={(event) => setPastedBlock(event.target.value)} rows={2} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+            {pasteError && <p role="alert" className="mt-1 text-xs text-red-600">{pasteError}</p>}
+            <button type="button" onClick={applyPastedRow} className="mt-2 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700">{t("pasteApply")}</button>
+          </div>
           {fields.map((f) =>
             f.multiline ? (
               <div key={f.key}>

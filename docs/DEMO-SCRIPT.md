@@ -1,9 +1,10 @@
-# Three-minute demo
+# Trust-Estate - Three-minute demo
 
-- **0:00 — Dashboard:** Start with the five sample leads, Hot/Warm/Cold counts, and ranked list.
-- **0:20 — Intake:** Add a lead with a realistic inquiry; show that analysis starts after the lead is saved.
-- **0:50 — Analysis:** Point out the summary, intent, requirements, concerns, suggested next action, response, and code-generated score reasons.
-- **1:20 — Chat:** Ask “what should I emphasize on the call?” on one lead, then ask “make my reply more assertive” on a different lead to show per-lead grounding.
-- **1:50 — Promise Keeper:** Open a Hinglish sample, extract promises, inspect deadline status, and copy a “Keep it” draft. Visit Today to see overdue and due-soon items first.
-- **2:30 — Feature flag:** Set `NEXT_PUBLIC_PROMISE_KEEPER_ENABLED=false` and restart; Promise Keeper UI disappears and Today returns to score ranking.
-- **2:45 — Technical decision:** “The model interprets language, while code computes both lead priority and deadline status. Groq is a fallback when Gemini fails.”
+- **0:00 - Dashboard:** Show sample leads, score counts, and ranked rows under the green-glass hero.
+- **0:20 - Inbox and language:** Copy an inquiry, switch to Hindi or Hinglish, and use a row to prefill intake. Paste a spreadsheet row as the alternate intake path.
+- **0:50 - Lead management:** Add a lead, inspect analysis and code-computed score reasons, change its status, then return to the dashboard and show the updated status.
+- **1:20 - Delete and restore:** Delete a real lead and a sample lead; when no sample leads remain, use Restore sample leads.
+- **1:40 - Chat:** Ask "what should I emphasize on the call?" on one lead, then ask "make my reply more assertive" on another to show per-lead grounding.
+- **2:05 - Promise Keeper:** Open a Hinglish sample, extract promises, inspect deadline status, and copy a "Keep it" draft. Visit Today to see overdue and due-soon items first.
+- **2:35 - Source link and feature flag:** If configured, open the direct leads database in a new tab. Set `NEXT_PUBLIC_PROMISE_KEEPER_ENABLED=false` and restart to show the plain score-ranked Today view.
+- **2:50 - Technical decision:** "The model interprets language, while code computes lead priority and promise deadlines. Groq is a fallback when Gemini fails."

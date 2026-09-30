@@ -12,10 +12,13 @@ import PromiseKeeperPanel from "@/components/PromiseKeeperPanel";
 import { showToast } from "@/components/Toast";
 import Link from "next/link";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { useI18n } from "@/components/LanguageProvider";
+import { leadStatusKeys } from "@/lib/i18n";
 
 export default function LeadDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const { t } = useI18n();
   const [lead, setLead] = useState<Lead | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [retrying, setRetrying] = useState(false);
@@ -63,21 +66,21 @@ export default function LeadDetailPage() {
     const updated = updateLead(lead.id, { status });
     if (updated) {
       setLead(updated);
-      showToast("Status updated");
+      showToast(t("statusUpdated"));
     } else {
-      showToast("Could not save status. Please try again.", "error");
+      showToast(t("failedSave"), "error");
     }
   }
 
   function confirmDeleteLead() {
     if (!lead) return;
     if (!deleteLead(lead.id)) {
-      showToast("Could not delete lead. Please try again.", "error");
+      showToast(t("failedDelete"), "error");
       setConfirmDelete(false);
       return;
     }
     setConfirmDelete(false);
-    showToast("Lead deleted");
+    showToast(t("leadDeleted"));
     router.push("/");
   }
 
@@ -133,13 +136,13 @@ export default function LeadDetailPage() {
             )}
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            {lead.form.location} · {lead.status}
+            {lead.form.location} · {t(leadStatusKeys[lead.status])}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <StatusSelect value={lead.status} onChange={changeStatus} />
           <ScoreBadge label={lead.score?.label ?? null} value={lead.score?.value} />
-          <button onClick={() => setConfirmDelete(true)} aria-label="Delete this lead" className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-500">Delete</button>
+          <button onClick={() => setConfirmDelete(true)} aria-label={t("deleteLeadLabel")} className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-500">{t("delete")}</button>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-# Masal Lead Copilot
+# Trust-Estate — Lead Copilot
 
 ## What I built
 
@@ -31,6 +31,8 @@ Core analysis produces lead summary, intent, requirements, objections, next acti
 
 Copy `.env.example` to `.env.local`, then fill in provider keys. Model names are configurable there. Promise Keeper is enabled by `NEXT_PUBLIC_PROMISE_KEEPER_ENABLED=true`.
 
+Optionally set `NEXT_PUBLIC_LEADS_SOURCE_URL` to a direct `https://` or `http://` URL for a viewable leads sheet/database. Google Sheets links should open the sheet itself (for example, end with `/edit?gid=0#gid=0`) and be shared for link viewing. The button stays hidden for missing or invalid URLs. An optional `public/hero.jpg` supplies the dashboard hero image; without it, CSS gradients provide the background.
+
 Windows PowerShell:
 
 ```powershell
@@ -55,6 +57,14 @@ Other shells can use `npm` in place of `npm.cmd`. Open the local URL printed by 
 
 Promise Keeper extracts who promised what, the quoted source phrase, an optional deadline, customer mood, contradictions, and explicit contact windows. The salesperson can mark promises done, add or remove commitments, and create a short “Keep it” follow-up draft to copy. The Today tab sorts overdue commitments first, then due-soon commitments, with lead score breaking ties. With the flag off, Promise Keeper UI is hidden and Today shows a score-ranked lead list.
 
+## Lead inbox, paste, and deletion
+
+The built-in Lead inbox supplies sample inquiries when no external sheet is configured. Copy a row or use it to prefill the intake form; spreadsheet rows can also be pasted as six tab-separated columns. Lead status and deletion flow through `lib/storage.ts`, which notifies the dashboard after successful writes. Deleted sample leads stay deleted until “Restore sample leads” is chosen.
+
+## Visual style and language
+
+The dashboard uses a dark slate base, emerald accent, and glass-style hero cards. An optional `public/hero.jpg` adds a local background image; layered gradients remain visible if that file is absent. The new dashboard and inbox surfaces have English, Hindi, and Hinglish UI dictionaries; this is local text, with no translation service.
+
 ## Known limitations
 
 - localStorage is per browser and is not shared across devices.
@@ -63,6 +73,7 @@ Promise Keeper extracts who promised what, the quoted source phrase, an optional
 - Project profile details are fictional. The model can misread Hinglish dates or mood; review extracted details before acting.
 - Drafts are for copying only; the app does not send messages or book appointments.
 - Provider quotas and availability depend on the configured accounts.
+- Demo login and language selection are not present in this checkout; API routes remain unauthenticated.
 
 ## AI usage disclosure
 

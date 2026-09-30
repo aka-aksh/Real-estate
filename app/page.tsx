@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Lead } from "@/types/lead";
+import { LeadFormSchema } from "@/types/lead";
+import type { Lead, LeadForm } from "@/types/lead";
 import { getLeads, saveLead, hasSeeded, markSeeded, LEADS_CHANGED_EVENT } from "@/lib/storage";
 import { seedLeads } from "@/data/seed-leads";
 import LeadCard from "@/components/LeadCard";
 import AddLeadModal from "@/components/AddLeadModal";
 import { showToast } from "@/components/Toast";
+import { useI18n } from "@/components/LanguageProvider";
+import { getLeadsSourceUrl } from "@/lib/leadsSource";
+import { computeCommitmentStatus } from "@/features/promiseKeeper/status";
+
+const sourceUrl = getLeadsSourceUrl(process.env.NEXT_PUBLIC_LEADS_SOURCE_URL);
+const promiseKeeperEnabled = process.env.NEXT_PUBLIC_PROMISE_KEEPER_ENABLED === "true";
 
 /** Sort: Hot first (by score desc), then Warm, Cold, Unscored last. */
 function sortLeads(leads: Lead[]): Lead[] {
@@ -21,6 +28,8 @@ export default function Dashboard() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [prefill, setPrefill] = useState<LeadForm | null>(null);
+  const { t } = useI18n();
 
   function restoreSamples() {
     const existingIds = new Set(getLeads().map((lead) => lead.id));
@@ -28,7 +37,7 @@ export default function Dashboard() {
       if (!existingIds.has(sample.id)) saveLead(sample);
     }
     setLeads(getLeads());
-    showToast("Sample leads restored");
+    showToast(t("sampleRestored"));
   }
 
   useEffect(() => {
@@ -41,7 +50,20 @@ export default function Dashboard() {
       markSeeded();
     }
     refreshLeads();
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial localStorage hydration gates the list until client data is ready
+    try {
+      const rawPrefill = sessionStorage.getItem("trustEstate.prefill");
+      if (rawPrefill) {
+        const parsedPrefill = LeadFormSchema.safeParse(JSON.parse(rawPrefill));
+        if (parsedPrefill.success) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect -- restore the one-time session handoff after client navigation
+          setPrefill(parsedPrefill.data);
+          setShowModal(true);
+        }
+        sessionStorage.removeItem("trustEstate.prefill");
+      }
+    } catch {
+      try { sessionStorage.removeItem("trustEstate.prefill"); } catch { /* ignore unavailable session storage */ }
+    }
     setLoaded(true);
     window.addEventListener("focus", refreshLeads);
     window.addEventListener("storage", refreshLeads);
@@ -60,45 +82,66 @@ export default function Dashboard() {
   const cold = leads.filter((l) => l.score?.label === "Cold").length;
   const unscored = leads.filter((l) => !l.score).length;
   const sorted = sortLeads(leads);
+  const realLocations = [...new Set(leads.filter((lead) => !lead.isSample).map((lead) => lead.form.location.trim()).filter(Boolean))];
+  const overduePromises = leads.flatMap((lead) => lead.promiseKeeper?.commitments ?? []).filter((commitment) => computeCommitmentStatus(commitment) === "overdue").length;
 
   if (!loaded) {
-    return <div className="py-12 text-center text-gray-400">Loading...</div>;
+    return <div className="py-12 text-center text-gray-400">{t("loading")}</div>;
   }
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <button
-          onClick={() => setShowModal(true)}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-700"
-        >
-          + Add Lead
-        </button>
+    <div className="space-y-7">
+      <section className="dashboard-hero relative isolate -mx-4 overflow-hidden px-4 py-8 sm:-mx-6 sm:rounded-3xl sm:px-7 sm:py-10">
+        <div className="relative z-10 grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+          <div className="max-w-2xl">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300">Trust-Estate</p>
+            <h1 className="text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-6xl">{t("headline")}</h1>
+            <p className="mt-4 max-w-xl text-base leading-7 text-slate-200 sm:text-lg">{t("heroSupport")}</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button onClick={() => setShowModal(true)} className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 shadow-xl transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-300">{t("addLead")}</button>
+              <a href="/inbox" className="rounded-xl border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition duration-200 hover:bg-white/15">{t("inboxButton")}</a>
+            </div>
+            <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/20 px-3 py-1.5 text-xs text-slate-100 backdrop-blur"><span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_#34d399]" />{t("demoReady")}</p>
+          </div>
+          <aside className="rounded-2xl border border-white/15 bg-white/[0.08] p-5 text-white shadow-2xl backdrop-blur-xl sm:p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">{t("todayGlance")}</p>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <GlanceCount label={t("hot")} count={hot} color="text-rose-200" />
+              <GlanceCount label={t("warm")} count={warm} color="text-amber-200" />
+              <GlanceCount label={t("cold")} count={cold} color="text-sky-200" />
+            </div>
+            {promiseKeeperEnabled && <div className="mt-4 flex items-center justify-between rounded-xl border border-white/10 bg-black/15 px-3 py-2 text-sm"><span className="flex items-center gap-2 text-slate-200"><span className="text-emerald-300" aria-hidden="true">✓</span>{t("overduePromises")}</span><span className="font-semibold text-emerald-200">{overduePromises}</span></div>}
+            {realLocations.length > 0 && <><p className="mt-4 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">{t("locations")}</p><div className="mt-2 flex flex-wrap gap-2">{realLocations.map((location) => <span key={location} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-200">{location}</span>)}</div></>}
+          </aside>
+        </div>
+      </section>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-2xl font-bold text-white">{t("dashboard")}</h2>
+        {sourceUrl && <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">{t("openDatabase")}</a>}
       </div>
 
       {!leads.some((lead) => lead.isSample) && (
         <button onClick={restoreSamples} className="mb-5 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
-          Restore sample leads
+          {t("restoreSamples")}
         </button>
       )}
 
       {/* Score summary cards */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <SummaryCard label="Hot" count={hot} color="text-red-600 bg-red-50" />
+        <SummaryCard label={t("hot")} count={hot} color="text-red-600 bg-red-50" />
         <SummaryCard
-          label="Warm"
+          label={t("warm")}
           count={warm}
           color="text-amber-600 bg-amber-50"
         />
         <SummaryCard
-          label="Cold"
+          label={t("cold")}
           count={cold}
           color="text-blue-600 bg-blue-50"
         />
         <SummaryCard
-          label="Unscored"
+          label={t("unscored")}
           count={unscored}
           color="text-gray-500 bg-gray-100"
         />
@@ -107,10 +150,7 @@ export default function Dashboard() {
       {/* Lead list */}
       {sorted.length === 0 ? (
         <div className="rounded-lg border border-dashed border-gray-300 py-12 text-center">
-          <p className="text-gray-500">No leads yet.</p>
-          <p className="mt-1 text-sm text-gray-400">
-            Click &quot;+ Add Lead&quot; or refresh to load sample leads.
-          </p>
+          <p className="text-gray-300">{t("leadsEmpty")}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -122,13 +162,18 @@ export default function Dashboard() {
 
       <AddLeadModal
         open={showModal}
-        onClose={() => setShowModal(false)}
+        prefill={prefill}
+        onClose={() => { setShowModal(false); setPrefill(null); }}
         onAdded={(lead) => setLeads((prev) => prev.some((item) => item.id === lead.id)
           ? prev.map((item) => item.id === lead.id ? lead : item)
           : [...prev, lead])}
       />
     </div>
   );
+}
+
+function GlanceCount({ label, count, color }: { label: string; count: number; color: string }) {
+  return <div className="rounded-xl border border-white/10 bg-black/15 p-3"><p className={`text-2xl font-bold ${color}`}>{count}</p><p className="mt-1 text-xs text-slate-300">{label}</p></div>;
 }
 
 function SummaryCard({
